@@ -27,10 +27,10 @@ Texture2D::Texture2D(const char *path)
 
 void Texture2D::bind(const Shader *shader, const std::string &name, int value) const
 {
-    shader->use();
-    shader->setInt(name, value);
     glActiveTexture(GL_TEXTURE0 + (unsigned int)value);
     glBindTexture(GL_TEXTURE_2D, id);
+    shader->use();
+    shader->setInt(name, value);
 }
 
 int Texture2D::get_width() const

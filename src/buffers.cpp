@@ -29,7 +29,7 @@ RenderBuffer::~RenderBuffer()
     glDeleteVertexArrays(1, &vao);
 }
 
-void RenderBuffer::linkAttribute(unsigned int layout, unsigned int size, unsigned int type, int stride, void *offset)
+void RenderBuffer::LinkAttribute(unsigned int layout, unsigned int size, unsigned int type, int stride, void *offset)
 {
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -41,7 +41,7 @@ void RenderBuffer::linkAttribute(unsigned int layout, unsigned int size, unsigne
     glBindVertexArray(0);
 }
 
-void RenderBuffer::render()
+void RenderBuffer::Render()
 {
     glBindVertexArray(vao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
@@ -51,7 +51,7 @@ void RenderBuffer::render()
     glBindVertexArray(0);
 }
 
-void RenderBuffer::render_arrays(int num)
+void RenderBuffer::RenderArrays(int num)
 {
     glBindVertexArray(vao);
 

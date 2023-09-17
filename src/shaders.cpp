@@ -2,26 +2,26 @@
 
 int Shader::getUniformLocation(const std::string &name) const
 {
-    int success;
-    char infoLog[1024];
+    // int success;
+    // char infoLog[1024];
 
-    int uniformLocation = glGetUniformLocation(id, name.c_str());
-    if (uniformLocation == -1)
-    {
-        std::cout << "[ERROR]: Cannot get uniform location of '" << name << "'\n";
-        return -1;
-    }
+    // int uniformLocation = 
+    // if (uniformLocation == -1)
+    // {
+    //     std::cout << "[ERROR]: Cannot get uniform location of '" << name << "'\n";
+    //     return -1;
+    // }
 
-    glValidateProgram(id);
-    glGetProgramiv(id, GL_VALIDATE_STATUS, &success);
-    if (!success)
-    {
-        glGetProgramInfoLog(id, 1024, NULL, infoLog);
-        std::cout << "[ERROR]: SHADER::PROGRAM::INVALID_SHADER_PROGRAM:\n" << infoLog << "\n";
-        return -1;
-    }
+    // glValidateProgram(id);
+    // glGetProgramiv(id, GL_VALIDATE_STATUS, &success);
+    // if (!success)
+    // {
+    //     glGetProgramInfoLog(id, 1024, NULL, infoLog);
+    //     std::cout << "[ERROR]: SHADER::PROGRAM::INVALID_SHADER_PROGRAM:\n" << infoLog << "\n";
+    //     return -1;
+    // }
 
-    return uniformLocation;
+    return glGetUniformLocation(id, name.c_str());
 }
 
 Shader::Shader(const char *vertexPath, const char *fragmentPath)

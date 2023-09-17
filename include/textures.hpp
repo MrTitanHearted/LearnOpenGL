@@ -9,6 +9,7 @@ private:
     int height;
     int nrChannels;
 public:
+    Texture2D() {}
     Texture2D(const char* path);
 
     void bind(const Shader *shader, const std::string &name, int value) const;

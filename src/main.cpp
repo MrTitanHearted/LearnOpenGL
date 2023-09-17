@@ -10,6 +10,7 @@
 #include <shaders.hpp>
 #include <textures.hpp>
 #include <camera.hpp>
+#include <model.hpp>
 
 void framebufferSizeCallback(GLFWwindow *window, int width, int height);
 void mouseCallback(GLFWwindow *window, double x, double y);
@@ -46,7 +47,6 @@ int main()
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
     glfwSetCursorPosCallback(window, mouseCallback);
     glfwSetScrollCallback(window, scrollCallback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
@@ -57,80 +57,10 @@ int main()
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glEnable(GL_DEPTH_TEST);
 
-    float vertices[] = {
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f, 1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f, 1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+    BaseModel vampire("./assets/models/vampire/dancing_vampire.dae");
+    Shader vampireShader("./shaders/model.vs", "./shaders/model.fs");
 
-        -0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f, 1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f, 1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f, 1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f, 0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
-
-        -0.5f,  0.5f,  0.5f, 1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f, 1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f, 1.0f, 0.0f,
-
-         0.5f,  0.5f,  0.5f, 1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f, 1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f, 1.0f, 0.0f,
-
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f, 1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f, 1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-
-        -0.5f,  0.5f, -0.5f, 0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f, 1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f, 1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f, 1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f, 0.0f, 1.0f,
-    };
-
-    unsigned int indices[] = {0};
-
-    RenderBuffer quad(vertices, sizeof(vertices), indices, sizeof(indices));
-    quad.linkAttribute(0, 3, GL_FLOAT, 5 * sizeof(float), (void *)0);
-    quad.linkAttribute(1, 2, GL_FLOAT, 5 * sizeof(float), (void *)(3 * sizeof(float)));
-
-    Shader shader("./shaders/shader.vs", "./shaders/shader.fs");
-
-    Texture2D myTexture("./assets/container.jpg");
-    myTexture.bind(&shader, "myTexture", 0);
-    Texture2D otherTexture("./assets/awesomeface.png");
-    otherTexture.bind(&shader, "otherTexture", 1);
-
-    glm::vec3 cubePositions[] = {
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(2.0f, 5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3(2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f, 3.0f, -7.5f),
-        glm::vec3(1.3f, -2.0f, -2.5f),
-        glm::vec3(1.5f, 2.0f, -2.5f),
-        glm::vec3(1.5f, 0.2f, -1.5f),
-        glm::vec3(-1.3f, 1.0f, -1.5f)};
-
-    glm::mat4x4 projection = glm::perspective(glm::radians(45.0f), (float)WIDTH / (float)HEIGHT, 0.001f, 1000.0f);
-
-    shader.setMat4x4("view", camera.GetViewMatrix());
-    shader.setMat4x4("projection", projection);
-
+    camera.SetSpeed(1.2);
     float fps = 0.0;
     while (!glfwWindowShouldClose(window))
     {
@@ -148,28 +78,21 @@ int main()
         int width;
         int height;
         glfwGetFramebufferSize(window, &width, &height);
-        projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.001f, 1000.0f);
-        shader.setMat4x4("projection", projection);
-        shader.setMat4x4("view", camera.GetViewMatrix());
-
+        glm::mat4x4 projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.001f, 1000.0f);
+        
         processInput(window);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        myTexture.bind(&shader, "myTexture", 0);
-        otherTexture.bind(&shader, "otherTexture", 1);
+        vampireShader.setMat4x4("projection", projection);
+        vampireShader.setMat4x4("view", camera.GetViewMatrix());
+        glm::mat4x4 model(1.0);
+        model = glm::scale(model, glm::vec3(0.05));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
+        vampireShader.setMat4x4("model", model);
 
-        for (unsigned int i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); i++)
-        {
-            glm::mat4x4 model = glm::mat4x4(1.0);
-            model = glm::translate(model, cubePositions[i]);
-            float angle = 20.0 * i;
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0, 0.3, 0.5));
-            shader.setMat4x4("model", model);
-
-            quad.render_arrays(36);
-        }
-
+        vampire.Render(vampireShader);
+        
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
