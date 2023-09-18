@@ -11,6 +11,7 @@
 #include <textures.hpp>
 #include <camera.hpp>
 #include <model.hpp>
+#include <animator.hpp>
 
 void framebufferSizeCallback(GLFWwindow *window, int width, int height);
 void mouseCallback(GLFWwindow *window, double x, double y);
@@ -57,8 +58,10 @@ int main()
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glEnable(GL_DEPTH_TEST);
 
-    BaseModel vampire("./assets/models/vampire/dancing_vampire.dae");
-    Shader vampireShader("./shaders/model.vs", "./shaders/model.fs");
+    SkinnedModel vampire("./assets/models/vampire/dancing_vampire.dae");
+    Animation dancingVampire("./assets/models/vampire/dancing_vampire.dae", &vampire);
+    Animator animator(&dancingVampire);
+    Shader vampireShader("./shaders/animated_model.vs", "./shaders/animated_model.fs");
 
     camera.SetSpeed(1.2);
     float fps = 0.0;
@@ -75,17 +78,22 @@ int main()
             glfwSetWindowTitle(window, title.str().c_str());
         }
 
+        processInput(window);
+
         int width;
         int height;
         glfwGetFramebufferSize(window, &width, &height);
         glm::mat4x4 projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.001f, 1000.0f);
         
-        processInput(window);
-
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         vampireShader.setMat4x4("projection", projection);
         vampireShader.setMat4x4("view", camera.GetViewMatrix());
+        auto transforms = animator.GetFinalMatrices();
+        for (int i = 0; i < transforms.size(); i++)
+        {
+            vampireShader.setMat4x4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+        }
         glm::mat4x4 model(1.0);
         model = glm::scale(model, glm::vec3(0.05));
         model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
