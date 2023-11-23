@@ -21,8 +21,69 @@ VertexDescriptor::VertexDescriptor(unsigned int location,
             this->offset = offset * sizeof(double);
             break;
         }
+        case GL_FLOAT_VEC2: {
+            this->stride = stride * sizeof(float) * 2;
+            this->offset = offset * sizeof(float) * 2;
+            break;
+        }
+        case GL_FLOAT_VEC3: {
+            this->stride = stride * sizeof(float) * 3;
+            this->offset = offset * sizeof(float) * 3;
+            break;
+        }
+        case GL_FLOAT_VEC4: {
+            this->stride = stride * sizeof(float) * 4;
+            this->offset = offset * sizeof(float) * 4;
+            break;
+        }
+        case GL_DOUBLE_VEC2: {
+            this->stride = stride * sizeof(double) * 2;
+            this->offset = offset * sizeof(double) * 2;
+            break;
+        }
+        case GL_DOUBLE_VEC3: {
+            this->stride = stride * sizeof(double) * 3;
+            this->offset = offset * sizeof(double) * 3;
+            break;
+        }
+        case GL_DOUBLE_VEC4: {
+            this->stride = stride * sizeof(double) * 4;
+            this->offset = offset * sizeof(double) * 4;
+            break;
+        }
+        case GL_FLOAT_MAT2: {
+            this->stride = stride * sizeof(float) * 4;
+            this->offset = offset * sizeof(float) * 4;
+            break;
+        }
+        case GL_FLOAT_MAT3: {
+            this->stride = stride * sizeof(float) * 9;
+            this->offset = offset * sizeof(float) * 9;
+            break;
+        }
+        case GL_FLOAT_MAT4: {
+            this->stride = stride * sizeof(float) * 16;
+            this->offset = offset * sizeof(float) * 16;
+            break;
+        }
+        case GL_DOUBLE_MAT2: {
+            this->stride = stride * sizeof(double) * 4;
+            this->offset = offset * sizeof(double) * 4;
+            break;
+        }
+        case GL_DOUBLE_MAT3: {
+            this->stride = stride * sizeof(double) * 9;
+            this->offset = offset * sizeof(double) * 9;
+            break;
+        }
+        case GL_DOUBLE_MAT4: {
+            this->stride = stride * sizeof(double) * 16;
+            this->offset = offset * sizeof(double) * 16;
+            break;
+        }
+        
         default:
-            std::cerr << "[ERROR]: There is no such type with handle: " << type << std::endl;
+            std::cerr << "[ERROR]: There is no such type or supported one with handle: " << type << std::endl;
     };
 }
 
