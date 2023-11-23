@@ -1,107 +1,325 @@
+#include <iostream>
+#include <vector>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <iostream>
-#include <sstream>
-
-
-#include <buffers.hpp>
 #include <shaders.hpp>
+#include <render_buffer.hpp>
 #include <textures.hpp>
-#include <camera.hpp>
-#include <model.hpp>
-#include <animator.hpp>
+#include <camera_manager.hpp>
 
-void framebufferSizeCallback(GLFWwindow *window, int width, int height);
-void mouseCallback(GLFWwindow *window, double x, double y);
-void scrollCallback(GLFWwindow *window, double xoffset, double yoffset);
-void processInput(GLFWwindow *window);
+#define TITLE "Learn OpenGL"
+float WIDTH = 800.0f;
+float HEIGHT = 600.0f;
 
-const unsigned int WIDTH = 800;
-const unsigned int HEIGHT = 600;
+void framebufferSizeCallback(GLFWwindow *_window, int width, int height) {
+    glViewport(0, 0, width, height);
+    WIDTH = width;
+    HEIGHT = height;
+}
 
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-float lastX = (float)WIDTH / 2.0;
-float lastY = (float)HEIGHT / 2.0;
-bool firstMouse = true;
+void processMouseMovement(GLFWwindow *, double, double);
+void processScroll(GLFWwindow *, double, double);
 
-float currentFrame = 0.0;
-float deltaTime = 0.0;
+CameraManager camera{WIDTH / 2.0f, HEIGHT / 2.0f, glm::vec3(0.0f, 0.0f, 1.0f)};
 
-int main()
-{
-    glfwInit();
+int main() {
+    if (!glfwInit()) {
+        std::cerr << "Failed to initialize glfw\n";
+        return -1;
+    }
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
 
-    GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "LearnOpenGL", NULL, NULL);
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
+    GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, TITLE, NULL, NULL);
+    if (!window) {
+        std::cerr << "Failed to created a window\n";
         glfwTerminate();
         return -1;
     }
-    glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
-    glfwSetCursorPosCallback(window, mouseCallback);
-    glfwSetScrollCallback(window, scrollCallback);
 
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
+    glfwMakeContextCurrent(window);
+
+    glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+    glfwSetCursorPosCallback(window, processMouseMovement);
+    glfwSetScrollCallback(window, processScroll);
+
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        std::cerr << "Failed to initialize glad\n";
+        glfwTerminate();
         return -1;
     }
-
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glViewport(0, 0, WIDTH, HEIGHT);
     glEnable(GL_DEPTH_TEST);
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
-    SkinnedModel vampire("./assets/models/vampire/dancing_vampire.dae");
-    Animation dancingVampire("./assets/models/vampire/dancing_vampire.dae", &vampire);
-    Animator animator(&dancingVampire);
-    Shader vampireShader("./shaders/animated_model.vs", "./shaders/animated_model.fs");
+    Shader shader("./assets/shaders/shader.vert", "./assets/shaders/shader.frag");
 
-    camera.SetSpeed(1.2);
-    float fps = 0.0;
-    while (!glfwWindowShouldClose(window))
-    {
-        deltaTime = (float)glfwGetTime() - currentFrame;
-        currentFrame = (float)glfwGetTime();
+    Texture2D wall("./assets/textures/wall.jpg");
+    Texture2D container("./assets/textures/container2.png");
 
-        if (currentFrame - fps >= 1.0)
-        {
-            fps = currentFrame;
-            std::stringstream title;
-            title << "LearnOpenGL             FPS: " << (int)(1.0 / deltaTime) << ", delta_time: " << deltaTime << " seconds";
-            glfwSetWindowTitle(window, title.str().c_str());
-        }
+    wall.activate(shader, "texture1", 0);
+    container.activate(shader, "texture2", 1);
 
-        processInput(window);
+    std::vector<float> vertices = {
+        -0.5f,
+        -0.5f,
+        -0.5f,
+        0.0f,
+        0.0f,
+        0.5f,
+        -0.5f,
+        -0.5f,
+        1.0f,
+        0.0f,
+        0.5f,
+        0.5f,
+        -0.5f,
+        1.0f,
+        1.0f,
+        0.5f,
+        0.5f,
+        -0.5f,
+        1.0f,
+        1.0f,
+        -0.5f,
+        0.5f,
+        -0.5f,
+        0.0f,
+        1.0f,
+        -0.5f,
+        -0.5f,
+        -0.5f,
+        0.0f,
+        0.0f,
 
-        int width;
-        int height;
-        glfwGetFramebufferSize(window, &width, &height);
-        glm::mat4x4 projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.001f, 1000.0f);
-        
+        -0.5f,
+        -0.5f,
+        0.5f,
+        0.0f,
+        0.0f,
+        0.5f,
+        -0.5f,
+        0.5f,
+        1.0f,
+        0.0f,
+        0.5f,
+        0.5f,
+        0.5f,
+        1.0f,
+        1.0f,
+        0.5f,
+        0.5f,
+        0.5f,
+        1.0f,
+        1.0f,
+        -0.5f,
+        0.5f,
+        0.5f,
+        0.0f,
+        1.0f,
+        -0.5f,
+        -0.5f,
+        0.5f,
+        0.0f,
+        0.0f,
+
+        -0.5f,
+        0.5f,
+        0.5f,
+        1.0f,
+        0.0f,
+        -0.5f,
+        0.5f,
+        -0.5f,
+        1.0f,
+        1.0f,
+        -0.5f,
+        -0.5f,
+        -0.5f,
+        0.0f,
+        1.0f,
+        -0.5f,
+        -0.5f,
+        -0.5f,
+        0.0f,
+        1.0f,
+        -0.5f,
+        -0.5f,
+        0.5f,
+        0.0f,
+        0.0f,
+        -0.5f,
+        0.5f,
+        0.5f,
+        1.0f,
+        0.0f,
+
+        0.5f,
+        0.5f,
+        0.5f,
+        1.0f,
+        0.0f,
+        0.5f,
+        0.5f,
+        -0.5f,
+        1.0f,
+        1.0f,
+        0.5f,
+        -0.5f,
+        -0.5f,
+        0.0f,
+        1.0f,
+        0.5f,
+        -0.5f,
+        -0.5f,
+        0.0f,
+        1.0f,
+        0.5f,
+        -0.5f,
+        0.5f,
+        0.0f,
+        0.0f,
+        0.5f,
+        0.5f,
+        0.5f,
+        1.0f,
+        0.0f,
+
+        -0.5f,
+        -0.5f,
+        -0.5f,
+        0.0f,
+        1.0f,
+        0.5f,
+        -0.5f,
+        -0.5f,
+        1.0f,
+        1.0f,
+        0.5f,
+        -0.5f,
+        0.5f,
+        1.0f,
+        0.0f,
+        0.5f,
+        -0.5f,
+        0.5f,
+        1.0f,
+        0.0f,
+        -0.5f,
+        -0.5f,
+        0.5f,
+        0.0f,
+        0.0f,
+        -0.5f,
+        -0.5f,
+        -0.5f,
+        0.0f,
+        1.0f,
+
+        -0.5f,
+        0.5f,
+        -0.5f,
+        0.0f,
+        1.0f,
+        0.5f,
+        0.5f,
+        -0.5f,
+        1.0f,
+        1.0f,
+        0.5f,
+        0.5f,
+        0.5f,
+        1.0f,
+        0.0f,
+        0.5f,
+        0.5f,
+        0.5f,
+        1.0f,
+        0.0f,
+        -0.5f,
+        0.5f,
+        0.5f,
+        0.0f,
+        0.0f,
+        -0.5f,
+        0.5f,
+        -0.5f,
+        0.0f,
+        1.0f,
+    };
+
+    std::vector<unsigned int> indices = {};
+
+    std::vector<VertexDescriptor> descs = {
+        VertexDescriptor(0, 3, GL_FLOAT, 5, 0),
+        VertexDescriptor(1, 2, GL_FLOAT, 5, 3),
+    };
+
+    std::vector<glm::vec3> cubePositions = {
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(2.0f, 5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3(2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f, 3.0f, -7.5f),
+        glm::vec3(1.3f, -2.0f, -2.5f),
+        glm::vec3(1.5f, 2.0f, -2.5f),
+        glm::vec3(1.5f, 0.2f, -1.5f),
+        glm::vec3(-1.3f, 1.0f, -1.5f)};
+
+    RenderBuffer cube(vertices, indices, descs);
+
+    glm::mat4 model = glm::mat4(1.0f);
+
+    float lastFrame = 0.0f;
+    float dt = 0.0f;
+
+    while (!glfwWindowShouldClose(window)) {
+        float currentFrame = glfwGetTime();
+        dt = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+            glfwSetWindowShouldClose(window, GL_TRUE);
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            camera.processCameraMovement(CameraMovement::WORLD_FORWARD, dt);
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            camera.processCameraMovement(CameraMovement::WORLD_BACKWARD, dt);
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            camera.processCameraMovement(CameraMovement::RIGHT, dt);
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            camera.processCameraMovement(CameraMovement::LEFT, dt);
+        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+            camera.processCameraMovement(CameraMovement::WORLD_DOWN, dt);
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+            camera.processCameraMovement(CameraMovement::WORLD_UP, dt);
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        vampireShader.setMat4x4("projection", projection);
-        vampireShader.setMat4x4("view", camera.GetViewMatrix());
-        auto transforms = animator.GetFinalMatrices();
-        for (int i = 0; i < transforms.size(); i++)
-        {
-            vampireShader.setMat4x4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+        shader.use();
+        shader.setMat4("view", camera.getViewMatrix());
+        shader.setMat4("proj", camera.getProjectionMatrix(WIDTH / HEIGHT));
+        for (unsigned int i = 0; i < cubePositions.size(); i++) {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePositions[i]);
+            float angle = 20.0f * i;
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            shader.setMat4("model", model);
+            cube.renderVertices();
         }
-        glm::mat4x4 model(1.0);
-        model = glm::scale(model, glm::vec3(0.05));
-        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0, 1.0, 0.0));
-        vampireShader.setMat4x4("model", model);
 
-        vampire.Render(vampireShader);
-        
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -110,57 +328,10 @@ int main()
     return 0;
 }
 
-void processInput(GLFWwindow *window)
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
-
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS )
-        camera.ProcessCameraMovement(CameraDirection::WORLD_FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) 
-        camera.ProcessCameraMovement(CameraDirection::WORLD_BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-        camera.ProcessCameraMovement(CameraDirection::LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-        camera.ProcessCameraMovement(CameraDirection::RIGHT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        camera.ProcessCameraMovement(CameraDirection::WORLD_UP, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-        camera.ProcessCameraMovement(CameraDirection::WORLD_DOWN, deltaTime);
-
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+void processMouseMovement(GLFWwindow *, double xPosIn, double yPosIn) {
+    camera.processMouseMovement(xPosIn, yPosIn);
 }
 
-void framebufferSizeCallback(GLFWwindow *window, int width, int height)
-{
-    glViewport(0, 0, width, height);
-}
-
-void mouseCallback(GLFWwindow *window, double x, double y)
-{
-    float xpos = (float)x;
-    float ypos = (float)y;
-
-    if (firstMouse)
-    {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
-    }
-
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos;
-
-    lastX = xpos;
-    lastY = ypos;
-
-    camera.ProcessMouseMovement(xoffset, yoffset);
-}
-
-void scrollCallback(GLFWwindow *window, double xoffset, double yoffset)
-{
-    camera.ProcessMouseScroll((float)yoffset);
+void processScroll(GLFWwindow *, double, double yOffset) {
+    camera.processMouseScroll((float)yOffset);
 }
