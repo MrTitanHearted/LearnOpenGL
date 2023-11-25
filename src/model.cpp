@@ -1,6 +1,7 @@
 #include <model.hpp>
 
 #include <map>
+#include <vector>
 #include <iostream>
 
 #include <assimp/Importer.hpp>
@@ -69,12 +70,9 @@ Mesh Model::processMesh(const aiMesh* mesh, const aiScene* scene) {
         glm::vec3 normal{mesh->mNormals[i].x,
                          mesh->mNormals[i].y,
                          mesh->mNormals[i].z};
-        glm::vec2 texCoords{};
-        if (mesh->mTextureCoords[0]) {
-            texCoords = glm::vec2(mesh->mTextureCoords[0][i].x,
-                                  mesh->mTextureCoords[0][i].y);
-        } else
-            texCoords = glm::vec2(0.0f, 0.0f);
+        glm::vec2 texCoords = mesh->mTextureCoords[0] ? glm::vec2(mesh->mTextureCoords[0][i].x,
+                                                                  mesh->mTextureCoords[0][i].y)
+                                                      : glm::vec2(0.0f);
 
         vertices.push_back(MeshVertex{position, normal, texCoords});
     }
@@ -89,7 +87,7 @@ Mesh Model::processMesh(const aiMesh* mesh, const aiScene* scene) {
         loadMaterialTextures(scene->mMaterials[mesh->mMaterialIndex], aiTextureType_NORMALS, textures);
     }
 
-    RenderBuffer renderBuffer{vertices, indices, MeshVertex::s_VertexDescriptors};
+    RenderBuffer renderBuffer{vertices, indices, MESH_VERTEX_DESCRIPTORS};
 
     return Mesh(renderBuffer, textures, name);
 }
@@ -123,7 +121,7 @@ void Model::loadMaterialTextures(const aiMaterial* material, aiTextureType type,
 SkinnedModel::SkinnedModel(const char* path) {
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate |
-                                                       aiProcess_GenNormals |
+                                                       aiProcess_GenSmoothNormals |
                                                        aiProcess_GenUVCoords |
                                                        aiProcess_FlipUVs |
                                                        aiProcess_JoinIdenticalVertices);
@@ -178,12 +176,9 @@ Mesh SkinnedModel::processMesh(const aiMesh* mesh, const aiScene* scene) {
         glm::vec3 normal{mesh->mNormals[i].x,
                          mesh->mNormals[i].y,
                          mesh->mNormals[i].z};
-        glm::vec2 texCoords{};
-        if (mesh->mTextureCoords[0]) {
-            texCoords = glm::vec2(mesh->mTextureCoords[0][i].x,
-                                  mesh->mTextureCoords[0][i].y);
-        } else
-            texCoords = glm::vec2(0.0f, 0.0f);
+        glm::vec2 texCoords = mesh->mTextureCoords[0] ? glm::vec2(mesh->mTextureCoords[0][i].x,
+                                                                  mesh->mTextureCoords[0][i].y)
+                                                      : glm::vec2(0.0f);
 
         vertices.push_back(SkinnedMeshVertex{position, normal, texCoords});
     }
@@ -198,7 +193,29 @@ Mesh SkinnedModel::processMesh(const aiMesh* mesh, const aiScene* scene) {
         loadMaterialTextures(scene->mMaterials[mesh->mMaterialIndex], aiTextureType_NORMALS, textures);
     }
 
-    RenderBuffer renderBuffer{vertices, indices, MeshVertex::s_VertexDescriptors};
+    for (unsigned int i = 0; i < mesh->mNumBones; i++) {
+        aiBone* bone = mesh->mBones[i];
+        for (unsigned int j = 0; j < bone->mNumWeights; j++) {
+            unsigned int vertexId = indices[bone->mWeights[j].mVertexId];
+            for (unsigned int k = 0; k < 4; k++)
+                if (vertices[vertexId].m_BoneWeights[k] == 0.0f) {
+                    vertices[vertexId].m_BoneIds[k] = i;
+                    vertices[vertexId].m_BoneWeights[k] = bone->mWeights[j].mWeight;
+                    break;
+                }
+        }
+    }
+
+    // for (unsigned int i = 0; i < mesh->mNumBones; i++) {
+    //     aiBone* bone = mesh->mBones[i];
+    //     for (unsigned int j = 0; j < (bone->mNumWeights >= 4 ? 4 : bone->mNumWeights); j++) {
+    //         unsigned int vertexId = indices[bone->mWeights[j].mVertexId];
+    //         vertices[vertexId].m_BoneIds[j] = i;
+    //         vertices[vertexId].m_BoneWeights[j] = bone->mWeights[j].mWeight;
+    //     }
+    // }
+
+    RenderBuffer renderBuffer{vertices, indices, SKINNED_MESH_VERTEX_DESCRIPTORS};
 
     return Mesh(renderBuffer, textures, name);
 }

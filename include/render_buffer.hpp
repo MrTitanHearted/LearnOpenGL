@@ -17,7 +17,12 @@ class VertexDescriptor {
                      unsigned int size,
                      unsigned int type,
                      unsigned int stride,
-                     unsigned int offset);
+                     unsigned int offset)
+        : location(location),
+          size(size),
+          type(type),
+          stride(stride),
+          offset(offset) {}
 };
 
 class RenderBuffer {

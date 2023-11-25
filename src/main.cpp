@@ -62,11 +62,17 @@ int main() {
 
     Shader shader("./assets/shaders/shader.vert", "./assets/shaders/shader.frag");
 
-    Model bob{"./assets/models/bob/model.dae"};
+    SkinnedModel vampire{"./assets/models/vampire/dancing_vampire.dae"};
 
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::scale(model, glm::vec3(0.5f));
-    model = glm::rotate(model, glm::radians(-90.0f), glm::normalize(glm::vec3(1.0f, 0.0f, 0.0f)));
+    model = glm::scale(model, glm::vec3(1.0f / 50.0f));
+    // model = glm::rotate(model, glm::radians(-90.0f), glm::normalize(glm::vec3(1.0f, 0.0f, 0.0f)));
+
+    glm::mat4 bones[200];
+    for (unsigned int i = 0; i < 200; i++)
+        bones[i] = glm::mat4(1.0f);
+
+    shader.setMat4Array("bones", bones, 200);
 
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = glfwGetTime();
@@ -96,10 +102,10 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         shader.use();
-        shader.setMat4("view", camera.getViewMatrix());
-        shader.setMat4("proj", camera.getProjectionMatrix(WIDTH / HEIGHT));
-        shader.setMat4("model", model);
-        bob.render(shader);
+        shader.set("view", camera.getViewMatrix());
+        shader.set("proj", camera.getProjectionMatrix(WIDTH / HEIGHT));
+        shader.set("model", model);
+        vampire.render(shader);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

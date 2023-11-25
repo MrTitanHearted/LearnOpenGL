@@ -44,7 +44,7 @@ Texture2D::Texture2D(const char* path, std::vector<Parameter> params) {
 
 void Texture2D::bind(const Shader& shader, const char* name, unsigned int index) const {
     shader.use();
-    shader.setInt(name, index);
+    shader.set(name, index);
     glActiveTexture(GL_TEXTURE0 + index);
     glBindTexture(GL_TEXTURE_2D, m_Id);
 }
