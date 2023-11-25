@@ -62,10 +62,11 @@ int main() {
 
     Shader shader("./assets/shaders/shader.vert", "./assets/shaders/shader.frag");
 
-    SkinnedModel vampire{"./assets/models/vampire/dancing_vampire.dae"};
+    SkinnedModel vampire{"./assets/models/vampire/model.dae"};
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::scale(model, glm::vec3(1.0f / 50.0f));
+    // model = glm::scale(model, glm::vec3(1.0f / 5.0f));
     // model = glm::rotate(model, glm::radians(-90.0f), glm::normalize(glm::vec3(1.0f, 0.0f, 0.0f)));
 
     glm::mat4 bones[200];
@@ -73,6 +74,11 @@ int main() {
         bones[i] = glm::mat4(1.0f);
 
     shader.setMat4Array("bones", bones, 200);
+
+    bool previous = false;
+    int displayBoneIndex = 0;
+    shader.set("displayBoneIndex", displayBoneIndex);
+    std::cout << "displayBoneIndex: " << displayBoneIndex << std::endl;
 
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = glfwGetTime();
@@ -85,6 +91,16 @@ int main() {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+        if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
+            if (!previous) {
+                shader.set("displayBoneIndex", ++displayBoneIndex);
+                std::cout << "displayBoneIndex: " << displayBoneIndex << std::endl;
+                previous = true;
+            }
+        } else if (previous)
+            if (glfwGetKey(window, GLFW_KEY_I) == GLFW_RELEASE)
+                previous = !previous;
 
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
             camera.processCameraMovement(CameraMovement::WORLD_FORWARD, dt);

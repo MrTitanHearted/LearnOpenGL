@@ -33,7 +33,7 @@ class SkinnedMeshVertex {
     SkinnedMeshVertex(glm::vec3 position = glm::vec3(0.0f),
                       glm::vec3 normal = glm::vec3(0.0f),
                       glm::vec2 texCoords = glm::vec2(0.0f),
-                      glm::ivec4 boneIds = glm::ivec4(0),
+                      glm::ivec4 boneIds = glm::ivec4(-1),
                       glm::vec4 boneWeights = glm::vec4(0.0f))
         : m_Position(position),
           m_Normal(normal),

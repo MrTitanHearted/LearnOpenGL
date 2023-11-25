@@ -3,6 +3,7 @@
 #include <map>
 #include <vector>
 #include <iostream>
+#include <fstream>
 
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
@@ -10,6 +11,8 @@
 #include <mesh.hpp>
 #include <render_buffer.hpp>
 #include <textures.hpp>
+
+#include <assimp_to_glm.hpp>
 
 #pragma region class Model
 Model::Model(const char* path) {
@@ -133,6 +136,8 @@ SkinnedModel::SkinnedModel(const char* path) {
     m_Path = path;
     m_Name = m_Path.substr(m_Path.find_last_of('/') + 1, m_Path.length());
     m_Directory = m_Path.substr(0, m_Path.find_last_of('/'));
+    m_BoneInfoMap = {};
+    m_BoneCounter = 0;
 
     processNode(scene->mRootNode, scene);
 }
@@ -193,29 +198,22 @@ Mesh SkinnedModel::processMesh(const aiMesh* mesh, const aiScene* scene) {
         loadMaterialTextures(scene->mMaterials[mesh->mMaterialIndex], aiTextureType_NORMALS, textures);
     }
 
-    for (unsigned int i = 0; i < mesh->mNumBones; i++) {
-        aiBone* bone = mesh->mBones[i];
-        for (unsigned int j = 0; j < bone->mNumWeights; j++) {
-            unsigned int vertexId = indices[bone->mWeights[j].mVertexId];
-            for (unsigned int k = 0; k < 4; k++)
-                if (vertices[vertexId].m_BoneWeights[k] == 0.0f) {
-                    vertices[vertexId].m_BoneIds[k] = i;
-                    vertices[vertexId].m_BoneWeights[k] = bone->mWeights[j].mWeight;
-                    break;
-                }
-        }
-    }
-
-    // for (unsigned int i = 0; i < mesh->mNumBones; i++) {
-    //     aiBone* bone = mesh->mBones[i];
-    //     for (unsigned int j = 0; j < (bone->mNumWeights >= 4 ? 4 : bone->mNumWeights); j++) {
-    //         unsigned int vertexId = indices[bone->mWeights[j].mVertexId];
-    //         vertices[vertexId].m_BoneIds[j] = i;
-    //         vertices[vertexId].m_BoneWeights[j] = bone->mWeights[j].mWeight;
-    //     }
-    // }
+    extractBoneWeights(vertices, mesh, scene);
 
     RenderBuffer renderBuffer{vertices, indices, SKINNED_MESH_VERTEX_DESCRIPTORS};
+
+    // std::ofstream file;
+    // file.open("../" + name + ".txt");
+
+    // file << "Mesh " << name << ":\n";
+    // for (unsigned int i = 0; i < vertices.size(); i++) {
+    //     SkinnedMeshVertex vertex = vertices[i];
+    //     for (unsigned char j = 0; j < 4; j++)
+    //         file << "\tVertex id: " << i << "; BoneId: " << vertex.m_BoneIds[j] << "; BoneWeights: " << vertex.m_BoneWeights[j] << std::endl;
+    //     file << std::endl;
+    // }
+
+    // file.close();
 
     return Mesh(renderBuffer, textures, name);
 }
@@ -241,6 +239,32 @@ void SkinnedModel::loadMaterialTextures(const aiMaterial* material, aiTextureTyp
         std::string path = m_Directory + "/" + name.C_Str();
         textureName += std::to_string(i);
         textures[textureName] = Texture2D(path);
+    }
+}
+void SkinnedModel::extractBoneWeights(std::vector<SkinnedMeshVertex>& vertices, const aiMesh* mesh, const aiScene* scene) {
+    for (unsigned int i = 0; i < mesh->mNumBones; i++) {
+        int boneId = -1;
+        std::string boneName = mesh->mBones[i]->mName.C_Str();
+        if (m_BoneInfoMap.find(boneName) == m_BoneInfoMap.end()) {
+            m_BoneInfoMap[boneName] = BoneInfo(m_BoneCounter,
+                                               AssimpToGlm::aiMatrix4x4ToGlm(mesh->mBones[i]->mOffsetMatrix));
+            boneId = m_BoneCounter++;
+        } else
+            boneId = m_BoneInfoMap[boneName].getId();
+        assert(boneId != -1);
+
+        for (unsigned int j = 0; j < mesh->mBones[i]->mNumWeights; j++) {
+            unsigned int vertexId = mesh->mBones[i]->mWeights[j].mVertexId;
+            float weight = mesh->mBones[i]->mWeights[j].mWeight;
+            assert(vertexId <= vertices.size());
+
+            for (unsigned int k = 0; k < 4; k++)
+                if (vertices[vertexId].m_BoneIds[k] <= 0.0f) {
+                    vertices[vertexId].m_BoneWeights[k] = weight;
+                    vertices[vertexId].m_BoneIds[k] = boneId;
+                    break;
+                }
+        }
     }
 }
 #pragma endregion
