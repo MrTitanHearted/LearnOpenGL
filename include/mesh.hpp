@@ -52,7 +52,7 @@ static const std::vector<VertexDescriptor> SKINNED_MESH_VERTEX_DESCRIPTORS = {
     VertexDescriptor{0, 3, 0x1406, sizeof(SkinnedMeshVertex), offsetof(SkinnedMeshVertex, m_Position)},     // GL_FLOAT = 0x1406
     VertexDescriptor{1, 3, 0x1406, sizeof(SkinnedMeshVertex), offsetof(SkinnedMeshVertex, m_Normal)},       // GL_FLOAT = 0x1406
     VertexDescriptor{2, 2, 0x1406, sizeof(SkinnedMeshVertex), offsetof(SkinnedMeshVertex, m_TexCoords)},    // GL_FLOAT = 0x1406
-    VertexDescriptor{3, 4, 0x1402, sizeof(SkinnedMeshVertex), offsetof(SkinnedMeshVertex, m_BoneIds)},      // GL_INT = 0x1404
+    VertexDescriptor{3, 4, 0x1404, sizeof(SkinnedMeshVertex), offsetof(SkinnedMeshVertex, m_BoneIds)},      // GL_INT = 0x1404
     VertexDescriptor{4, 4, 0x1406, sizeof(SkinnedMeshVertex), offsetof(SkinnedMeshVertex, m_BoneWeights)},  // GL_FLOAT = 0x1406
 };
 

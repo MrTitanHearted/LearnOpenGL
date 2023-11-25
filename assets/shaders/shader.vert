@@ -18,11 +18,22 @@ uniform mat4 proj;
 uniform mat4 model;
 
 void main() {
-    mat4 boneTransform = mat4(0.0);
-    for(int i = 0; i < 4; i++) boneTransform += aBoneWeights[i] * bones[aBoneIds[i]];
+    vec4 totalPosition = vec4(0.0);
+    for(int i = 0; i < 4; i++) {
+        if(aBoneIds[i] == -1)
+            continue;
+        if(aBoneIds[i] >= MAX_BONES) {
+            totalPosition = vec4(aPos, 1.0);
+            break;
+        }
+        vec4 localPosition = bones[aBoneIds[i]] * vec4(aPos, 1.0);
+        totalPosition += localPosition * aBoneWeights[i];
+        vec3 localNormal = mat3(bones[aBoneIds[i]]) * aNormal;
+    }
 
-    // gl_Position = proj * view * model * bones[49] * vec4(aPos, 1.0);
-    gl_Position = proj * view * model * bones[0] * vec4(aPos, 1.0);
+    // gl_Position = proj * view * model * totalPosition * vec4(aPos, 1.0);
+
+    gl_Position = proj * view * model * vec4(aPos, 1.0);
     Normal = aNormal;
     TexCoords = aTexCoords;
     BoneIds = aBoneIds;

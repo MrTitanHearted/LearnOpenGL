@@ -11,6 +11,7 @@
 #include <textures.hpp>
 #include <camera_manager.hpp>
 #include <mesh.hpp>
+// #include <model_mine.hpp>
 #include <model.hpp>
 
 const char *TITLE = "Learn OpenGL";
@@ -65,9 +66,10 @@ int main() {
     SkinnedModel vampire{"./assets/models/vampire/model.dae"};
 
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::scale(model, glm::vec3(1.0f / 50.0f));
+    // model = glm::translate(model, glm::vec3(0.0f, -0.4f, 0.0f));
     // model = glm::scale(model, glm::vec3(1.0f / 5.0f));
     // model = glm::rotate(model, glm::radians(-90.0f), glm::normalize(glm::vec3(1.0f, 0.0f, 0.0f)));
+    model = glm::scale(model, glm::vec3(1.0f / 50.0f));
 
     glm::mat4 bones[200];
     for (unsigned int i = 0; i < 200; i++)
@@ -94,7 +96,8 @@ int main() {
 
         if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
             if (!previous) {
-                shader.set("displayBoneIndex", ++displayBoneIndex);
+                displayBoneIndex = ++displayBoneIndex % vampire.getBoneCount();
+                shader.set("displayBoneIndex", displayBoneIndex);
                 std::cout << "displayBoneIndex: " << displayBoneIndex << std::endl;
                 previous = true;
             }

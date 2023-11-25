@@ -34,23 +34,6 @@ Model::Model(const char* path) {
     processNode(scene->mRootNode, scene);
 }
 
-void Model::render(const Shader& shader) const {
-    for (const Mesh& mesh : m_Meshes)
-        mesh.render(shader);
-}
-
-std::string Model::getPath() const {
-    return m_Path;
-}
-
-std::string Model::getName() const {
-    return m_Name;
-}
-
-std::string Model::getDirectory() const {
-    return m_Directory;
-}
-
 void Model::processNode(const aiNode* node, const aiScene* scene) {
     for (unsigned int i = 0; i < node->mNumMeshes; i++)
         m_Meshes.push_back(processMesh(scene->mMeshes[node->mMeshes[i]], scene));
@@ -137,26 +120,9 @@ SkinnedModel::SkinnedModel(const char* path) {
     m_Name = m_Path.substr(m_Path.find_last_of('/') + 1, m_Path.length());
     m_Directory = m_Path.substr(0, m_Path.find_last_of('/'));
     m_BoneInfoMap = {};
-    m_BoneCounter = 0;
+    m_BoneCount = 0;
 
     processNode(scene->mRootNode, scene);
-}
-
-void SkinnedModel::render(const Shader& shader) const {
-    for (const Mesh& mesh : m_Meshes)
-        mesh.render(shader);
-}
-
-std::string SkinnedModel::getPath() const {
-    return m_Path;
-}
-
-std::string SkinnedModel::getName() const {
-    return m_Name;
-}
-
-std::string SkinnedModel::getDirectory() const {
-    return m_Directory;
 }
 
 void SkinnedModel::processNode(const aiNode* node, const aiScene* scene) {
@@ -245,10 +211,11 @@ void SkinnedModel::extractBoneWeights(std::vector<SkinnedMeshVertex>& vertices, 
     for (unsigned int i = 0; i < mesh->mNumBones; i++) {
         int boneId = -1;
         std::string boneName = mesh->mBones[i]->mName.C_Str();
+
         if (m_BoneInfoMap.find(boneName) == m_BoneInfoMap.end()) {
-            m_BoneInfoMap[boneName] = BoneInfo(m_BoneCounter,
+            m_BoneInfoMap[boneName] = BoneInfo(m_BoneCount,
                                                AssimpToGlm::aiMatrix4x4ToGlm(mesh->mBones[i]->mOffsetMatrix));
-            boneId = m_BoneCounter++;
+            boneId = m_BoneCount++;
         } else
             boneId = m_BoneInfoMap[boneName].getId();
         assert(boneId != -1);
@@ -256,14 +223,15 @@ void SkinnedModel::extractBoneWeights(std::vector<SkinnedMeshVertex>& vertices, 
         for (unsigned int j = 0; j < mesh->mBones[i]->mNumWeights; j++) {
             unsigned int vertexId = mesh->mBones[i]->mWeights[j].mVertexId;
             float weight = mesh->mBones[i]->mWeights[j].mWeight;
-            assert(vertexId <= vertices.size());
 
-            for (unsigned int k = 0; k < 4; k++)
-                if (vertices[vertexId].m_BoneIds[k] <= 0.0f) {
+            assert(vertexId <= vertices.size());
+            for (unsigned int k = 0; k < 4; k++) {
+                if (vertices[vertexId].m_BoneIds[k] < 0) {
                     vertices[vertexId].m_BoneWeights[k] = weight;
                     vertices[vertexId].m_BoneIds[k] = boneId;
                     break;
                 }
+            }
         }
     }
 }

@@ -14,11 +14,14 @@ class Model {
    public:
     Model(const char *path);
 
-    void render(const Shader &shader) const;
+    void render(const Shader &shader) const {
+        for (const Mesh &mesh : m_Meshes)
+            mesh.render(shader);
+    }
 
-    std::string getPath() const;
-    std::string getName() const;
-    std::string getDirectory() const;
+    std::string getPath() const { return m_Path; }
+    std::string getName() const { return m_Name; }
+    std::string getDirectory() const { return m_Directory; }
 
    private:
     std::vector<Mesh> m_Meshes;
@@ -35,11 +38,16 @@ class SkinnedModel {
    public:
     SkinnedModel(const char *path);
 
-    void render(const Shader &shader) const;
+    void render(const Shader &shader) const {
+        for (const Mesh &mesh : m_Meshes)
+            mesh.render(shader);
+    }
 
-    std::string getPath() const;
-    std::string getName() const;
-    std::string getDirectory() const;
+    std::string getPath() const { return m_Path; }
+    std::string getName() const { return m_Name; }
+    std::string getDirectory() const { return m_Directory; }
+
+    unsigned int getBoneCount() const { return m_BoneCount; }
 
    private:
     std::vector<Mesh> m_Meshes;
@@ -48,7 +56,7 @@ class SkinnedModel {
     std::string m_Name;
     std::string m_Directory;
 
-    unsigned int m_BoneCounter;
+    unsigned int m_BoneCount;
 
     void processNode(const aiNode *node, const aiScene *scene);
     Mesh processMesh(const aiMesh *mesh, const aiScene *scene);

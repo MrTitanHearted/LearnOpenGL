@@ -18,14 +18,26 @@ RenderBuffer::RenderBuffer(const void *vertices,
     glBufferData(GL_ARRAY_BUFFER, verticesSize, vertices, GL_STATIC_DRAW);
 
     for (const VertexDescriptor &vertexDescriptor : vertexDescriptors) {
-        glVertexAttribPointer(
-            vertexDescriptor.location,
-            vertexDescriptor.size,
-            vertexDescriptor.type,
-            GL_FALSE,
-            vertexDescriptor.stride,
-            (void *)vertexDescriptor.offset);
         glEnableVertexAttribArray(vertexDescriptor.location);
+        if (vertexDescriptor.type == GL_INT ||
+            vertexDescriptor.type == GL_UNSIGNED_INT ||
+            vertexDescriptor.type == GL_BYTE ||
+            vertexDescriptor.type == GL_UNSIGNED_BYTE) {
+            glVertexAttribIPointer(
+                vertexDescriptor.location,
+                vertexDescriptor.size,
+                vertexDescriptor.type,
+                vertexDescriptor.stride,
+                (void *)vertexDescriptor.offset);
+        } else {
+            glVertexAttribPointer(
+                vertexDescriptor.location,
+                vertexDescriptor.size,
+                vertexDescriptor.type,
+                GL_FALSE,
+                vertexDescriptor.stride,
+                (void *)vertexDescriptor.offset);
+        }
 
         m_VerticesCount = verticesSize / vertexDescriptor.stride;
     }
