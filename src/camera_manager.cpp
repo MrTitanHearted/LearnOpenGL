@@ -2,17 +2,6 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-CameraManager::CameraManager(float lastX, float lastY, glm::vec3 position, glm::vec3 front) {
-    m_FirstMouse = true;
-
-    m_LastXPosition = lastX;
-    m_LastYPosition = lastY;
-    m_Far = 1000.0f;
-    m_Near = 0.0001f;
-
-    m_Camera = Camera(position, front);
-}
-
 void CameraManager::processCameraMovement(CameraMovement direction, float dt) {
     m_Camera.processCameraMovement(direction, dt);
 }

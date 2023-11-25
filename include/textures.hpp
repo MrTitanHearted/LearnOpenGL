@@ -1,6 +1,6 @@
 #pragma once
 
-#include <shaders.hpp>
+#include <shader.hpp>
 
 #include <map>
 #include <vector>
@@ -26,20 +26,32 @@ const std::vector<Parameter> TEXTURE_2D_DEFAULT_PARAMS = {
 
 class Texture2D {
    public:
+    Texture2D() {}
+
     Texture2D(const char *path, std::vector<Parameter> params);
     Texture2D(const std::string &path, std::vector<Parameter> params) : Texture2D(path.c_str(), params) {}
 
     Texture2D(const char *path) : Texture2D(path, TEXTURE_2D_DEFAULT_PARAMS) {}
     Texture2D(const std::string &path) : Texture2D(path.c_str()) {}
 
-    void activate(const Shader &shader, const char *name, unsigned int index) const;
-    void activate(const Shader &shader, const std::string &name, unsigned int index) const {
-        activate(shader, name.c_str(), index);
+    void bind(const Shader &shader, const char *name, unsigned int index) const;
+    void bind(const Shader &shader, const std::string &name, unsigned int index) const {
+        bind(shader, name.c_str(), index);
     }
+
+    std::string getPath() const;
+    std::string getName() const;
+    std::string getDirectory() const;
 
    private:
     unsigned int m_Id;
     int m_Width;
     int m_Height;
     int m_ChannelsCount;
+
+    std::string m_Path;
+    std::string m_Name;
+    std::string m_Directory;
+
+    static inline std::map<std::string, Texture2D> s_Cache = {};
 };

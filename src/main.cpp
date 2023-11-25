@@ -6,25 +6,26 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <shaders.hpp>
+#include <shader.hpp>
 #include <render_buffer.hpp>
 #include <textures.hpp>
 #include <camera_manager.hpp>
+#include <mesh.hpp>
+#include <model.hpp>
 
-#define TITLE "Learn OpenGL"
+const char *TITLE = "Learn OpenGL";
 float WIDTH = 800.0f;
 float HEIGHT = 600.0f;
 
-void framebufferSizeCallback(GLFWwindow *_window, int width, int height) {
-    glViewport(0, 0, width, height);
-    WIDTH = width;
-    HEIGHT = height;
-}
+void framebufferSizeCallback(GLFWwindow *, int, int);
 
 void processMouseMovement(GLFWwindow *, double, double);
 void processScroll(GLFWwindow *, double, double);
 
 CameraManager camera{WIDTH / 2.0f, HEIGHT / 2.0f, glm::vec3(0.0f, 0.0f, 1.0f)};
+
+float lastFrame = 0.0f;
+float dt = 0.0f;
 
 int main() {
     if (!glfwInit()) {
@@ -61,225 +62,11 @@ int main() {
 
     Shader shader("./assets/shaders/shader.vert", "./assets/shaders/shader.frag");
 
-    Texture2D wall("./assets/textures/wall.jpg");
-    Texture2D container("./assets/textures/container2.png");
-
-    wall.activate(shader, "texture1", 0);
-    container.activate(shader, "texture2", 1);
-
-    std::vector<float> vertices = {
-        -0.5f,
-        -0.5f,
-        -0.5f,
-        0.0f,
-        0.0f,
-        0.5f,
-        -0.5f,
-        -0.5f,
-        1.0f,
-        0.0f,
-        0.5f,
-        0.5f,
-        -0.5f,
-        1.0f,
-        1.0f,
-        0.5f,
-        0.5f,
-        -0.5f,
-        1.0f,
-        1.0f,
-        -0.5f,
-        0.5f,
-        -0.5f,
-        0.0f,
-        1.0f,
-        -0.5f,
-        -0.5f,
-        -0.5f,
-        0.0f,
-        0.0f,
-
-        -0.5f,
-        -0.5f,
-        0.5f,
-        0.0f,
-        0.0f,
-        0.5f,
-        -0.5f,
-        0.5f,
-        1.0f,
-        0.0f,
-        0.5f,
-        0.5f,
-        0.5f,
-        1.0f,
-        1.0f,
-        0.5f,
-        0.5f,
-        0.5f,
-        1.0f,
-        1.0f,
-        -0.5f,
-        0.5f,
-        0.5f,
-        0.0f,
-        1.0f,
-        -0.5f,
-        -0.5f,
-        0.5f,
-        0.0f,
-        0.0f,
-
-        -0.5f,
-        0.5f,
-        0.5f,
-        1.0f,
-        0.0f,
-        -0.5f,
-        0.5f,
-        -0.5f,
-        1.0f,
-        1.0f,
-        -0.5f,
-        -0.5f,
-        -0.5f,
-        0.0f,
-        1.0f,
-        -0.5f,
-        -0.5f,
-        -0.5f,
-        0.0f,
-        1.0f,
-        -0.5f,
-        -0.5f,
-        0.5f,
-        0.0f,
-        0.0f,
-        -0.5f,
-        0.5f,
-        0.5f,
-        1.0f,
-        0.0f,
-
-        0.5f,
-        0.5f,
-        0.5f,
-        1.0f,
-        0.0f,
-        0.5f,
-        0.5f,
-        -0.5f,
-        1.0f,
-        1.0f,
-        0.5f,
-        -0.5f,
-        -0.5f,
-        0.0f,
-        1.0f,
-        0.5f,
-        -0.5f,
-        -0.5f,
-        0.0f,
-        1.0f,
-        0.5f,
-        -0.5f,
-        0.5f,
-        0.0f,
-        0.0f,
-        0.5f,
-        0.5f,
-        0.5f,
-        1.0f,
-        0.0f,
-
-        -0.5f,
-        -0.5f,
-        -0.5f,
-        0.0f,
-        1.0f,
-        0.5f,
-        -0.5f,
-        -0.5f,
-        1.0f,
-        1.0f,
-        0.5f,
-        -0.5f,
-        0.5f,
-        1.0f,
-        0.0f,
-        0.5f,
-        -0.5f,
-        0.5f,
-        1.0f,
-        0.0f,
-        -0.5f,
-        -0.5f,
-        0.5f,
-        0.0f,
-        0.0f,
-        -0.5f,
-        -0.5f,
-        -0.5f,
-        0.0f,
-        1.0f,
-
-        -0.5f,
-        0.5f,
-        -0.5f,
-        0.0f,
-        1.0f,
-        0.5f,
-        0.5f,
-        -0.5f,
-        1.0f,
-        1.0f,
-        0.5f,
-        0.5f,
-        0.5f,
-        1.0f,
-        0.0f,
-        0.5f,
-        0.5f,
-        0.5f,
-        1.0f,
-        0.0f,
-        -0.5f,
-        0.5f,
-        0.5f,
-        0.0f,
-        0.0f,
-        -0.5f,
-        0.5f,
-        -0.5f,
-        0.0f,
-        1.0f,
-    };
-
-    std::vector<unsigned int> indices = {};
-
-    std::vector<VertexDescriptor> descs = {
-        VertexDescriptor(0, 3, GL_FLOAT, 5, 0),
-        VertexDescriptor(1, 2, GL_FLOAT, 5, 3),
-    };
-
-    std::vector<glm::vec3> cubePositions = {
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(2.0f, 5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3(2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f, 3.0f, -7.5f),
-        glm::vec3(1.3f, -2.0f, -2.5f),
-        glm::vec3(1.5f, 2.0f, -2.5f),
-        glm::vec3(1.5f, 0.2f, -1.5f),
-        glm::vec3(-1.3f, 1.0f, -1.5f)};
-
-    RenderBuffer cube(vertices, indices, descs);
+    Model bob{"./assets/models/bob/model.dae"};
 
     glm::mat4 model = glm::mat4(1.0f);
-
-    float lastFrame = 0.0f;
-    float dt = 0.0f;
+    model = glm::scale(model, glm::vec3(0.5f));
+    model = glm::rotate(model, glm::radians(-90.0f), glm::normalize(glm::vec3(1.0f, 0.0f, 0.0f)));
 
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = glfwGetTime();
@@ -311,14 +98,8 @@ int main() {
         shader.use();
         shader.setMat4("view", camera.getViewMatrix());
         shader.setMat4("proj", camera.getProjectionMatrix(WIDTH / HEIGHT));
-        for (unsigned int i = 0; i < cubePositions.size(); i++) {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            float angle = 20.0f * i;
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-            shader.setMat4("model", model);
-            cube.renderVertices();
-        }
+        shader.setMat4("model", model);
+        bob.render(shader);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -328,10 +109,16 @@ int main() {
     return 0;
 }
 
+void framebufferSizeCallback(GLFWwindow *window, int width, int height) {
+    glViewport(0, 0, width, height);
+    WIDTH = width;
+    HEIGHT = height;
+}
+
 void processMouseMovement(GLFWwindow *, double xPosIn, double yPosIn) {
-    camera.processMouseMovement(xPosIn, yPosIn);
+    camera.processMouseMovement(xPosIn, yPosIn, dt);
 }
 
 void processScroll(GLFWwindow *, double, double yOffset) {
-    camera.processMouseScroll((float)yOffset);
+    camera.processMouseScroll((float)yOffset, dt);
 }

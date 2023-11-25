@@ -6,7 +6,16 @@
 
 class CameraManager {
    public:
-    CameraManager(float lastX, float lastY, glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 front = glm::vec3(0.0f, 0.0f, -1.0f));
+    CameraManager(float lastX,
+                  float lastY,
+                  glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f),
+                  glm::vec3 front = glm::vec3(0.0f, 0.0f, -1.0f))
+        : m_FirstMouse(true),
+          m_LastXPosition(lastX),
+          m_LastYPosition(lastY),
+          m_Far(1000.0f),
+          m_Near(0.0001f),
+          m_Camera(Camera(position, front)) {}
 
     void processCameraMovement(CameraMovement direction, float dt);
     void processMouseMovement(float xPos, float yPos, bool constrain = true, float constrainValue = 89.9f);

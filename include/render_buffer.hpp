@@ -22,6 +22,8 @@ class VertexDescriptor {
 
 class RenderBuffer {
    public:
+    RenderBuffer() {}
+
     RenderBuffer(const void *vertices,
                  int verticesSize,
                  const unsigned int *indices,

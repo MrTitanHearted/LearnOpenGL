@@ -16,10 +16,12 @@ target_sources(${TARGET} PRIVATE ${SOURCES})
 target_include_directories(${TARGET} PRIVATE include)
 
 add_custom_target(
-    copy_shaders ALL 
+    copy_assets ALL 
         COMMAND ${CMAKE_COMMAND} -E copy_directory 
         ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:${TARGET}>/assets
 )
+
+add_dependencies(${TARGET} copy_assets)
 
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)

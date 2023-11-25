@@ -81,7 +81,7 @@ VertexDescriptor::VertexDescriptor(unsigned int location,
             this->offset = offset * sizeof(double) * 16;
             break;
         }
-        
+
         default:
             std::cerr << "[ERROR]: There is no such type or supported one with handle: " << type << std::endl;
     };
