@@ -1,5 +1,7 @@
 #include <bone.hpp>
 
+#include <iostream>
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
@@ -57,6 +59,8 @@ unsigned int KeyFrames::getRotationIndex(float animationTime) const {
     for (unsigned int i = 0; i < m_Rotations.size() - 1; i++)
         if (animationTime < m_Rotations[i + 1].timeStamp)
             return i;
+    if (m_Rotations.size() == 1)
+        return 0;
     assert(0);
 }
 

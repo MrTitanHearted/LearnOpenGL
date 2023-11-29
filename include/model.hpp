@@ -15,8 +15,7 @@ class Model {
     Model(const char *path);
 
     void render(const Shader &shader) const {
-        for (const Mesh &mesh : m_Meshes)
-            mesh.render(shader);
+        for (const Mesh &mesh : m_Meshes) mesh.render(shader);
     }
 
     std::string getPath() const { return m_Path; }
@@ -31,7 +30,7 @@ class Model {
 
     void processNode(const aiNode *node, const aiScene *scene);
     Mesh processMesh(const aiMesh *mesh, const aiScene *scene);
-    void loadMaterialTextures(const aiMaterial *material, aiTextureType type, std::map<std::string, Texture2D> &textures);
+    void loadMaterialTextures(const aiMaterial *material, aiTextureType type, std::map<std::string, Texture2D> &textures, const aiScene *scene);
 };
 
 class SkinnedModel {
@@ -39,8 +38,7 @@ class SkinnedModel {
     SkinnedModel(const char *path);
 
     void render(const Shader &shader) const {
-        for (const Mesh &mesh : m_Meshes)
-            mesh.render(shader);
+        for (const Mesh &mesh : m_Meshes) mesh.render(shader);
     }
 
     std::string getPath() const { return m_Path; }
@@ -61,7 +59,7 @@ class SkinnedModel {
 
     void processNode(const aiNode *node, const aiScene *scene);
     Mesh processMesh(const aiMesh *mesh, const aiScene *scene);
-    void loadMaterialTextures(const aiMaterial *material, aiTextureType type, std::map<std::string, Texture2D> &textures);
+    void loadMaterialTextures(const aiMaterial *material, aiTextureType type, std::map<std::string, Texture2D> &textures, const aiScene *scene);
     void extractBoneWeights(std::vector<SkinnedMeshVertex> &vertices, const aiMesh *mesh, const aiScene *scene);
 
    protected:

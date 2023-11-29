@@ -21,7 +21,9 @@ Model::Model(const char* path) {
                                                        aiProcess_GenNormals |
                                                        aiProcess_GenUVCoords |
                                                        aiProcess_FlipUVs |
-                                                       aiProcess_JoinIdenticalVertices);
+                                                       aiProcess_JoinIdenticalVertices |
+                                                       aiProcess_OptimizeGraph |
+                                                       aiProcess_OptimizeMeshes);
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
         std::cerr << "[ERROR]::FAILED_TO_LOAD_MODEL::path: "
                   << path << "\nError: "
@@ -68,9 +70,9 @@ Mesh Model::processMesh(const aiMesh* mesh, const aiScene* scene) {
             indices.push_back(mesh->mFaces[i].mIndices[j]);
 
     if (mesh->mMaterialIndex >= 0) {
-        loadMaterialTextures(scene->mMaterials[mesh->mMaterialIndex], aiTextureType_DIFFUSE, textures);
-        loadMaterialTextures(scene->mMaterials[mesh->mMaterialIndex], aiTextureType_SPECULAR, textures);
-        loadMaterialTextures(scene->mMaterials[mesh->mMaterialIndex], aiTextureType_NORMALS, textures);
+        loadMaterialTextures(scene->mMaterials[mesh->mMaterialIndex], aiTextureType_DIFFUSE, textures, scene);
+        loadMaterialTextures(scene->mMaterials[mesh->mMaterialIndex], aiTextureType_SPECULAR, textures, scene);
+        loadMaterialTextures(scene->mMaterials[mesh->mMaterialIndex], aiTextureType_NORMALS, textures, scene);
     }
 
     RenderBuffer renderBuffer{vertices, indices, MESH_VERTEX_DESCRIPTORS};
@@ -78,7 +80,7 @@ Mesh Model::processMesh(const aiMesh* mesh, const aiScene* scene) {
     return Mesh(renderBuffer, textures, name);
 }
 
-void Model::loadMaterialTextures(const aiMaterial* material, aiTextureType type, std::map<std::string, Texture2D>& textures) {
+void Model::loadMaterialTextures(const aiMaterial* material, aiTextureType type, std::map<std::string, Texture2D>& textures, const aiScene* scene) {
     std::string textureName{};
     switch (type) {
         case aiTextureType_DIFFUSE:
@@ -98,7 +100,9 @@ void Model::loadMaterialTextures(const aiMaterial* material, aiTextureType type,
         material->GetTexture(type, i, &name);
         std::string path = m_Directory + "/" + name.C_Str();
         textureName += std::to_string(i);
-        textures[textureName] = Texture2D(path);
+
+        const aiTexture* pAssimpTexture = scene->GetEmbeddedTexture(name.C_Str());
+        textures[textureName] = pAssimpTexture == nullptr ? Texture2D(path) : Texture2D(path, pAssimpTexture->pcData, pAssimpTexture->mWidth);
     }
 }
 #pragma endregion
@@ -110,7 +114,9 @@ SkinnedModel::SkinnedModel(const char* path) {
                                                        aiProcess_GenSmoothNormals |
                                                        aiProcess_GenUVCoords |
                                                        aiProcess_FlipUVs |
-                                                       aiProcess_JoinIdenticalVertices);
+                                                       aiProcess_JoinIdenticalVertices |
+                                                       aiProcess_OptimizeGraph |
+                                                       aiProcess_OptimizeMeshes);
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
         std::cerr << "[ERROR]::FAILED_TO_LOAD_MODEL::path: "
                   << path << "\nError: "
@@ -159,34 +165,22 @@ Mesh SkinnedModel::processMesh(const aiMesh* mesh, const aiScene* scene) {
             indices.push_back(mesh->mFaces[i].mIndices[j]);
 
     if (mesh->mMaterialIndex >= 0) {
-        loadMaterialTextures(scene->mMaterials[mesh->mMaterialIndex], aiTextureType_DIFFUSE, textures);
-        loadMaterialTextures(scene->mMaterials[mesh->mMaterialIndex], aiTextureType_SPECULAR, textures);
-        loadMaterialTextures(scene->mMaterials[mesh->mMaterialIndex], aiTextureType_NORMALS, textures);
+        loadMaterialTextures(scene->mMaterials[mesh->mMaterialIndex], aiTextureType_DIFFUSE, textures, scene);
+        loadMaterialTextures(scene->mMaterials[mesh->mMaterialIndex], aiTextureType_SPECULAR, textures, scene);
+        loadMaterialTextures(scene->mMaterials[mesh->mMaterialIndex], aiTextureType_NORMALS, textures, scene);
     }
 
     extractBoneWeights(vertices, mesh, scene);
 
     RenderBuffer renderBuffer{vertices, indices, SKINNED_MESH_VERTEX_DESCRIPTORS};
 
-    {
-        // std::ofstream file;
-        // file.open("../" + name + ".txt");
-
-        // file << "Mesh " << name << ":\n";
-        // for (unsigned int i = 0; i < vertices.size(); i++) {
-        //     SkinnedMeshVertex vertex = vertices[i];
-        //     for (unsigned char j = 0; j < 4; j++)
-        //         file << "\tVertex id: " << i << "; BoneId: " << vertex.m_BoneIds[j] << "; BoneWeights: " << vertex.m_BoneWeights[j] << std::endl;
-        //     file << std::endl;
-        // }
-
-        // file.close();
-    }
-
     return Mesh(renderBuffer, textures, name);
 }
 
-void SkinnedModel::loadMaterialTextures(const aiMaterial* material, aiTextureType type, std::map<std::string, Texture2D>& textures) {
+void SkinnedModel::loadMaterialTextures(const aiMaterial* material,
+                                        aiTextureType type,
+                                        std::map<std::string, Texture2D>& textures,
+                                        const aiScene* scene) {
     std::string textureName{};
     switch (type) {
         case aiTextureType_DIFFUSE:
@@ -206,7 +200,9 @@ void SkinnedModel::loadMaterialTextures(const aiMaterial* material, aiTextureTyp
         material->GetTexture(type, i, &name);
         std::string path = m_Directory + "/" + name.C_Str();
         textureName += std::to_string(i);
-        textures[textureName] = Texture2D(path);
+
+        const aiTexture* pAssimpTexture = scene->GetEmbeddedTexture(name.C_Str());
+        textures[textureName] = pAssimpTexture == nullptr ? Texture2D(path) : Texture2D(path, pAssimpTexture->pcData, pAssimpTexture->mWidth);
     }
 }
 void SkinnedModel::extractBoneWeights(std::vector<SkinnedMeshVertex>& vertices, const aiMesh* mesh, const aiScene* scene) {
@@ -216,7 +212,7 @@ void SkinnedModel::extractBoneWeights(std::vector<SkinnedMeshVertex>& vertices, 
 
         if (m_BoneMap.find(boneName) == m_BoneMap.end()) {
             m_BoneMap[boneName] = Bone(m_BoneCount,
-                                           AssimpToGlm::aiMatrix4x4ToGlm(mesh->mBones[i]->mOffsetMatrix));
+                                       AssimpToGlm::aiMatrix4x4ToGlm(mesh->mBones[i]->mOffsetMatrix));
             boneId = m_BoneCount++;
         } else
             boneId = m_BoneMap[boneName].getId();
@@ -225,6 +221,8 @@ void SkinnedModel::extractBoneWeights(std::vector<SkinnedMeshVertex>& vertices, 
         for (unsigned int j = 0; j < mesh->mBones[i]->mNumWeights; j++) {
             unsigned int vertexId = mesh->mBones[i]->mWeights[j].mVertexId;
             float weight = mesh->mBones[i]->mWeights[j].mWeight;
+
+            if (weight == 0.0f) break;
 
             assert(vertexId <= vertices.size());
             for (unsigned int k = 0; k < 4; k++) {

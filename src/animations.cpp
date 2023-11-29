@@ -50,7 +50,9 @@ void Animation::readHierarchyData(AnimationChannel& dest, const aiNode* src) {
 Animations::Animations(const char* path, SkinnedModel* pModel) {
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate |
-                                                       aiProcess_JoinIdenticalVertices);
+                                                       aiProcess_JoinIdenticalVertices |
+                                                       aiProcess_OptimizeGraph |
+                                                       aiProcess_OptimizeMeshes);
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
         std::cerr << "[ERROR]::FAILED_TO_LOAD_MODEL::path: "
                   << path << "\nError: "

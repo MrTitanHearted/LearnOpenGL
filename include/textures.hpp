@@ -34,6 +34,12 @@ class Texture2D {
     Texture2D(const char *path) : Texture2D(path, TEXTURE_2D_DEFAULT_PARAMS) {}
     Texture2D(const std::string &path) : Texture2D(path.c_str()) {}
 
+    Texture2D(const char *path, const void *pData, unsigned int size, std::vector<Parameter> params);
+    Texture2D(const std::string &path, const void *pData, unsigned int size, std::vector<Parameter> params) : Texture2D(path.c_str(), pData, size, params) {}
+
+    Texture2D(const char *path, const void *pData, unsigned int size) : Texture2D(path, pData, size, TEXTURE_2D_DEFAULT_PARAMS) {}
+    Texture2D(const std::string &path, const void *pData, unsigned int size) : Texture2D(path.c_str(), pData, size) {}
+
     void bind(const Shader &shader, const char *name, unsigned int index) const;
     void bind(const Shader &shader, const std::string &name, unsigned int index) const {
         bind(shader, name.c_str(), index);

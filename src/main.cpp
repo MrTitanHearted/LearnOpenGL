@@ -68,9 +68,9 @@ int main() {
     Animations animations{"./assets/models/bob/model.dae", &bob};
     Animator animator{animations.getFirst()};
 
-    glm::mat4 vampireModel = glm::mat4(1.0f);
-    vampireModel = glm::translate(vampireModel, glm::vec3(0.0f, -0.4f, 0.0f)); 
-    vampireModel = glm::scale(vampireModel, glm::vec3(.5f));    
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, -0.4f, 0.0f)); 
+    model = glm::scale(model, glm::vec3(1.0f / 2.0f));    
 
     bool previous = false;
     while (!glfwWindowShouldClose(window)) {
@@ -108,7 +108,7 @@ int main() {
         shader.set("view", camera.getViewMatrix());
         animator.set(shader, "bones");
 
-        shader.set("model", vampireModel);
+        shader.set("model", model);
 
         bob.render(shader);
 
