@@ -65,8 +65,8 @@ int main() {
     Shader shader("./assets/shaders/shader.vert", "./assets/shaders/shader.frag");
 
     SkinnedModel bob{"./assets/models/bob/model.dae"};
-    Animation animation{"./assets/models/bob/model.dae", &bob};
-    Animator animator{&animation};
+    Animations animations{"./assets/models/bob/model.dae", &bob};
+    Animator animator{animations.getFirst()};
 
     glm::mat4 vampireModel = glm::mat4(1.0f);
     vampireModel = glm::translate(vampireModel, glm::vec3(0.0f, -0.4f, 0.0f)); 

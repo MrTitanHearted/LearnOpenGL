@@ -5,21 +5,13 @@
 
 #include <assimp_to_glm.hpp>
 
-Animation::Animation(const char* path, SkinnedModel* model) {
-    Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate |
-                                                       aiProcess_JoinIdenticalVertices);
-    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
-        std::cerr << "[ERROR]::FAILED_TO_LOAD_MODEL::path: "
-                  << path << "\nError: "
-                  << importer.GetErrorString() << std::endl;
+Animation::Animation(const aiAnimation* pAssimpAnimation, const aiScene* pScene, SkinnedModel* pModel) {
+    m_Name = pAssimpAnimation->mName.C_Str();
+    m_Duration = pAssimpAnimation->mDuration;
+    m_TicksPerSecond = pAssimpAnimation->mTicksPerSecond;
 
-    aiAnimation* animation = scene->mAnimations[0];
-    m_Duration = animation->mDuration;
-    m_TicksPerSecond = animation->mTicksPerSecond;
-
-    readHierarchyData(m_RootChannel, scene->mRootNode);
-    readMissingBones(animation, *model);
+    readHierarchyData(m_RootChannel, pScene->mRootNode);
+    readMissingBones(pAssimpAnimation, *pModel);
 }
 
 void Animation::readMissingBones(const aiAnimation* animation, SkinnedModel& model) {
@@ -53,4 +45,17 @@ void Animation::readHierarchyData(AnimationChannel& dest, const aiNode* src) {
         readHierarchyData(newChannel, src->mChildren[i]);
         dest.children.push_back(newChannel);
     }
+}
+
+Animations::Animations(const char* path, SkinnedModel* pModel) {
+    Assimp::Importer importer;
+    const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate |
+                                                       aiProcess_JoinIdenticalVertices);
+    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+        std::cerr << "[ERROR]::FAILED_TO_LOAD_MODEL::path: "
+                  << path << "\nError: "
+                  << importer.GetErrorString() << std::endl;
+
+    for (unsigned int i = 0; i < scene->mNumAnimations; i++)
+        m_Animations[scene->mAnimations[i]->mName.C_Str()] = Animation(scene->mAnimations[i], scene, pModel);
 }
