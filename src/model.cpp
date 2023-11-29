@@ -119,7 +119,7 @@ SkinnedModel::SkinnedModel(const char* path) {
     m_Path = path;
     m_Name = m_Path.substr(m_Path.find_last_of('/') + 1, m_Path.length());
     m_Directory = m_Path.substr(0, m_Path.find_last_of('/'));
-    m_BoneInfoMap = {};
+    m_BoneMap = {};
     m_BoneCount = 0;
 
     processNode(scene->mRootNode, scene);
@@ -168,18 +168,20 @@ Mesh SkinnedModel::processMesh(const aiMesh* mesh, const aiScene* scene) {
 
     RenderBuffer renderBuffer{vertices, indices, SKINNED_MESH_VERTEX_DESCRIPTORS};
 
-    // std::ofstream file;
-    // file.open("../" + name + ".txt");
+    {
+        // std::ofstream file;
+        // file.open("../" + name + ".txt");
 
-    // file << "Mesh " << name << ":\n";
-    // for (unsigned int i = 0; i < vertices.size(); i++) {
-    //     SkinnedMeshVertex vertex = vertices[i];
-    //     for (unsigned char j = 0; j < 4; j++)
-    //         file << "\tVertex id: " << i << "; BoneId: " << vertex.m_BoneIds[j] << "; BoneWeights: " << vertex.m_BoneWeights[j] << std::endl;
-    //     file << std::endl;
-    // }
+        // file << "Mesh " << name << ":\n";
+        // for (unsigned int i = 0; i < vertices.size(); i++) {
+        //     SkinnedMeshVertex vertex = vertices[i];
+        //     for (unsigned char j = 0; j < 4; j++)
+        //         file << "\tVertex id: " << i << "; BoneId: " << vertex.m_BoneIds[j] << "; BoneWeights: " << vertex.m_BoneWeights[j] << std::endl;
+        //     file << std::endl;
+        // }
 
-    // file.close();
+        // file.close();
+    }
 
     return Mesh(renderBuffer, textures, name);
 }
@@ -212,12 +214,12 @@ void SkinnedModel::extractBoneWeights(std::vector<SkinnedMeshVertex>& vertices, 
         int boneId = -1;
         std::string boneName = mesh->mBones[i]->mName.C_Str();
 
-        if (m_BoneInfoMap.find(boneName) == m_BoneInfoMap.end()) {
-            m_BoneInfoMap[boneName] = BoneInfo(m_BoneCount,
-                                               AssimpToGlm::aiMatrix4x4ToGlm(mesh->mBones[i]->mOffsetMatrix));
+        if (m_BoneMap.find(boneName) == m_BoneMap.end()) {
+            m_BoneMap[boneName] = Bone(m_BoneCount,
+                                           AssimpToGlm::aiMatrix4x4ToGlm(mesh->mBones[i]->mOffsetMatrix));
             boneId = m_BoneCount++;
         } else
-            boneId = m_BoneInfoMap[boneName].getId();
+            boneId = m_BoneMap[boneName].getId();
         assert(boneId != -1);
 
         for (unsigned int j = 0; j < mesh->mBones[i]->mNumWeights; j++) {

@@ -11,8 +11,9 @@
 #include <textures.hpp>
 #include <camera_manager.hpp>
 #include <mesh.hpp>
-// #include <model_mine.hpp>
 #include <model.hpp>
+#include <animations.hpp>
+#include <animator.hpp>
 
 const char *TITLE = "Learn OpenGL";
 float WIDTH = 800.0f;
@@ -23,7 +24,7 @@ void framebufferSizeCallback(GLFWwindow *, int, int);
 void processMouseMovement(GLFWwindow *, double, double);
 void processScroll(GLFWwindow *, double, double);
 
-CameraManager camera{WIDTH / 2.0f, HEIGHT / 2.0f, glm::vec3(0.0f, 0.0f, 1.0f)};
+CameraManager camera{WIDTH / 2.0f, HEIGHT / 2.0f, glm::vec3(0.0f, 0.0f, 3.0f)};
 
 float lastFrame = 0.0f;
 float dt = 0.0f;
@@ -63,25 +64,15 @@ int main() {
 
     Shader shader("./assets/shaders/shader.vert", "./assets/shaders/shader.frag");
 
-    SkinnedModel vampire{"./assets/models/vampire/model.dae"};
+    SkinnedModel bob{"./assets/models/bob/model.dae"};
+    Animation animation{"./assets/models/bob/model.dae", &bob};
+    Animator animator{&animation};
 
-    glm::mat4 model = glm::mat4(1.0f);
-    // model = glm::translate(model, glm::vec3(0.0f, -0.4f, 0.0f));
-    // model = glm::scale(model, glm::vec3(1.0f / 5.0f));
-    // model = glm::rotate(model, glm::radians(-90.0f), glm::normalize(glm::vec3(1.0f, 0.0f, 0.0f)));
-    model = glm::scale(model, glm::vec3(1.0f / 50.0f));
-
-    glm::mat4 bones[200];
-    for (unsigned int i = 0; i < 200; i++)
-        bones[i] = glm::mat4(1.0f);
-
-    shader.setMat4Array("bones", bones, 200);
+    glm::mat4 vampireModel = glm::mat4(1.0f);
+    vampireModel = glm::translate(vampireModel, glm::vec3(0.0f, -0.4f, 0.0f)); 
+    vampireModel = glm::scale(vampireModel, glm::vec3(.5f));    
 
     bool previous = false;
-    int displayBoneIndex = 0;
-    shader.set("displayBoneIndex", displayBoneIndex);
-    std::cout << "displayBoneIndex: " << displayBoneIndex << std::endl;
-
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = glfwGetTime();
         dt = currentFrame - lastFrame;
@@ -93,17 +84,6 @@ int main() {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-
-        if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
-            if (!previous) {
-                displayBoneIndex = ++displayBoneIndex % vampire.getBoneCount();
-                shader.set("displayBoneIndex", displayBoneIndex);
-                std::cout << "displayBoneIndex: " << displayBoneIndex << std::endl;
-                previous = true;
-            }
-        } else if (previous)
-            if (glfwGetKey(window, GLFW_KEY_I) == GLFW_RELEASE)
-                previous = !previous;
 
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
             camera.processCameraMovement(CameraMovement::WORLD_FORWARD, dt);
@@ -120,11 +100,17 @@ int main() {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        animator.updateAnimation(dt);
+
         shader.use();
-        shader.set("view", camera.getViewMatrix());
+
         shader.set("proj", camera.getProjectionMatrix(WIDTH / HEIGHT));
-        shader.set("model", model);
-        vampire.render(shader);
+        shader.set("view", camera.getViewMatrix());
+        animator.set(shader, "bones");
+
+        shader.set("model", vampireModel);
+
+        bob.render(shader);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
