@@ -152,9 +152,9 @@ void framebufferSizeCallback(GLFWwindow *window, int width, int height) {
 }
 
 void processMouseMovement(GLFWwindow *, double xPosIn, double yPosIn) {
-    camera.processMouseMovement(xPosIn, yPosIn, dt);
+    camera.processMouseMovement(xPosIn, yPosIn);
 }
 
 void processScroll(GLFWwindow *, double, double yOffset) {
-    camera.processMouseScroll((float)yOffset, dt);
+    camera.processMouseScroll((float)yOffset);
 }
