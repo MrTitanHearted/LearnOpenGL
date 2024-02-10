@@ -60,22 +60,18 @@ int main() {
     }
     glViewport(0, 0, WIDTH, HEIGHT);
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_STENCIL_TEST);
-    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
     Shader shader("./assets/shaders/shader.vert", "./assets/shaders/shader.frag");
-    Shader stencil("./assets/shaders/shader.vert", "./assets/shaders/stencil.frag");
 
-    shader.set("near", camera.getNear());
-    shader.set("far", camera.getFar());
-
-    Model nanosuit{"./assets/models/nanosuit/nanosuit.obj"};
+    SkinnedModel vanguard{"./assets/models/vanguard/punching.dae"};
+    Animations animations{"./assets/models/vanguard/punching.dae", &vanguard};
+    Animator animator{animations.getFirst()};
 
     glm::mat4 model = glm::mat4(1.0f);
-    // model = glm::translate(model, glm::vec3(0.0f, -0.4f, 0.0f));
-    model = glm::scale(model, glm::vec3(1.0f / 2.0f));
+    model = glm::translate(model, glm::vec3(0.0f, -0.4f, 0.0f)); 
+    // model = glm::scale(model, glm::vec3(1.0f / 50.0f));    
+    // model = glm::scale(model, glm::vec3(1.0f / 2.0f));    
 
     bool previous = false;
     while (!glfwWindowShouldClose(window)) {
@@ -103,39 +99,19 @@ int main() {
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
             camera.processCameraMovement(CameraMovement::WORLD_UP, dt);
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glm::mat4 proj = camera.getProjectionMatrix(WIDTH / HEIGHT);
-        glm::mat4 view = camera.getViewMatrix();
+        animator.updateAnimation(dt);
 
-        glStencilFunc(GL_ALWAYS, 1, 0xFF);
-        glStencilMask(0xFF);
         shader.use();
-        shader.set("proj", proj);
-        shader.set("view", view);
-        shader.set("model", model);
-        nanosuit.render(shader);
 
-        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-        glStencilMask(0x00);
-        glDisable(GL_DEPTH_TEST);
-        stencil.use();
-        float scale = 1.1f;
-        glm::mat4 stencilModel = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-        stencilModel = glm::scale(model, glm::vec3(scale));
-        stencil.set("model", stencilModel);
-        stencil.set("proj", proj);
-        stencil.set("view", view);
-        nanosuit.render(stencil);
-        stencilModel = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-        stencilModel = glm::scale(model, glm::vec3(scale));
-        stencil.set("model", stencilModel);
-        stencil.set("proj", proj);
-        stencil.set("view", view);
-        nanosuit.render(stencil);
-        glStencilMask(0xFF);
-        glStencilFunc(GL_ALWAYS, 0, 0xFF);
-        glEnable(GL_DEPTH_TEST);
+        shader.set("proj", camera.getProjectionMatrix(WIDTH / HEIGHT));
+        shader.set("view", camera.getViewMatrix());
+        animator.set(shader, "bones");
+
+        shader.set("model", model);
+
+        vanguard.render(shader);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -152,9 +128,9 @@ void framebufferSizeCallback(GLFWwindow *window, int width, int height) {
 }
 
 void processMouseMovement(GLFWwindow *, double xPosIn, double yPosIn) {
-    camera.processMouseMovement(xPosIn, yPosIn);
+    camera.processMouseMovement(xPosIn, yPosIn, dt);
 }
 
 void processScroll(GLFWwindow *, double, double yOffset) {
-    camera.processMouseScroll((float)yOffset);
+    camera.processMouseScroll((float)yOffset, dt);
 }
