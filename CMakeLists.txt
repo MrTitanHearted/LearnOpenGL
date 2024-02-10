@@ -5,6 +5,8 @@ set(CMAKE_TOOLCHAIN_FILE $ENV{VCPKG_CMAKE})
 set(CMAKE_CXX_STANDARD 23)
 project(LearnOpenGL)
 
+file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})
+
 set(TARGET app)
 
 add_executable(${TARGET})
@@ -14,14 +16,6 @@ file(GLOB SOURCES src/*.cpp)
 target_sources(${TARGET} PRIVATE ${SOURCES})
 
 target_include_directories(${TARGET} PRIVATE include)
-
-add_custom_target(
-    copy_assets ALL 
-        COMMAND ${CMAKE_COMMAND} -E copy_directory 
-        ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:${TARGET}>/assets
-)
-
-add_dependencies(${TARGET} copy_assets)
 
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glad CONFIG REQUIRED)
